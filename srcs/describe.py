@@ -1,10 +1,11 @@
 import argparse
 import pandas as pd
+import numpy as np
 from utils import load
-from math import sqrt
+from math import sqrt, pow
 
 
-def count(df: pd.DataFrame) -> list[int]:
+def count(df: pd.DataFrame) -> list[float]:
     """
     Counts the number of values for each feature in dataframe.
     Excludes NaN values.
@@ -13,14 +14,14 @@ def count(df: pd.DataFrame) -> list[int]:
     df (pd.DataFrame): the dataframe.
 
     Returns:
-    count (list[int]): A list of count values for each row.
+    count (list[float]): A list of count values for each row.
     """
     num_features = df.shape[1]
     row = df.iloc[:, 0].notna()
     count = []
 
     for row in range(num_features):
-        count.append(int(df.iloc[:, row].notna().sum()))
+        count.append(float(df.iloc[:, row].notna().sum()))
     return count
 
 
@@ -57,14 +58,14 @@ def max(df: pd.DataFrame) -> list[float]:
     return max_values
 
 
-def quantile(df: pd.DataFrame, n: list[int], q: float) -> list[float]:
+def quantile(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
     """
-    Returns quartile q each feature in sorted dataframe. Uses linear type
+    Returns quartile q for each feature in sorted dataframe. Uses linear type
     of interpolation as per pandas default setting : i + (j - i) * fract.
 
     Parameters:
     df (pd.DataFrame): the sorted dataframe.
-    n (list[int]): the list of counts of values for each row.
+    n (list[float]): the list of counts of values for each row.
     q (float) : the quartile, must be between 0 and 1
 
     Returns:
@@ -90,16 +91,38 @@ def quantile(df: pd.DataFrame, n: list[int], q: float) -> list[float]:
     return quantile
 
 
-def mean(df: pd.DataFrame, n: list[int]) -> list[float]:
+def std(df: pd.DataFrame, n: list[float], mean_val: list[float]) -> list[float]:
+    """
+    Returns sample standard deviation for each feature in dataframe.
+
+    Parameters:
+    df (pd.DataFrame): the sorted dataframe.
+    n (list[float]): the list of counts of values for each row.
+    mean_val (list[float]) : the list of mean values for each row.
+
+    Returns:
+    std_val (list[float]) : a list of each row's standard deviation.
+    """
+    num_features = df.shape[1]
+    std_val = []
+
+    for row in range(num_features):
+        serie = pd.Series(df.iloc[:, row]).dropna()
+        var = sum([pow(x - mean_val[row], 2) for x in serie]) / (n[row] - 1)
+        std_val.append(sqrt(var))
+    return std_val
+
+
+def mean(df: pd.DataFrame, n: list[float]) -> list[float]:
     """
     Returns the mean of all values for each feature in sorted dataframe.
 
     Parameters:
     df (pd.DataFrame): the dataframe.
-    n (list[int]): the list of counts of values for each row.
+    n (list[float]): the list of counts of values for each row.
 
     Returns:
-    means(list[float]): A list of the mean for each row.
+    means (list[float]): A list of the mean for each row.
     """
     num_features = df.shape[1]
     means = []
@@ -129,32 +152,63 @@ def __parse_argument() -> str:
     return parser.path
 
 
+def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Creates description of dataframe similarly to the pandas describe function.
+    Shows for each row, excluding NaN values:
+        - Count of values
+        - Mean of values
+        - Sample standard deviation of values
+        - Minimum value
+        - 25th percentile
+        - 50th percentile
+        - 75th percentile
+        - Maximum value
+
+    Parameters:
+    df (pd.DataFrame): the dataframe to describe
+
+    Returns:
+    describe_df (pd.DataFrame):
+    """
+    features = ["Arithmancy", "Astronomy",
+                "Herbology", "Defense Against the Dark Arts",
+                "Divination", "Ancient Runes",
+                "History of Magic", "Transfiguration",
+                "Potions", "Care of Magical Creatures",
+                "Charms", "Flying"]
+    df = df[features]
+    df_sorted = df.apply(lambda x: x.sort_values().values)
+    count_val = count(df_sorted)
+    mean_val = mean(df_sorted, count_val)
+
+    indexes = ["Count", "Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
+    describe_values = [
+        count_val,
+        mean_val,
+        std(df_sorted, count_val, mean_val),
+        min(df_sorted),
+        quantile(df_sorted, count_val, 0.25),
+        quantile(df_sorted, count_val, 0.5),
+        quantile(df_sorted, count_val, 0.75),
+        max(df_sorted)
+        ]
+    describe_df = pd.DataFrame(
+        index=indexes,
+        columns=features,
+        data=np.array(describe_values)
+        )
+    return describe_df
+
+
 def main():
     try:
         path = __parse_argument()
         df = load(path)
-        features = ["Arithmancy", "Astronomy",
-                    "Herbology", "Defense Against the Dark Arts",
-                    "Divination", "Ancient Runes",
-                    "History of Magic", "Transfiguration",
-                    "Potions", "Care of Magical Creatures",
-                    "Charms", "Flying"]
-        df = df[features]
-        describe = df.describe()
-
-        df_sorted = df.apply(lambda x: x.sort_values().values)
-        count_values = count(df)
-        min_val = min(df_sorted)
-        max_val = max(df_sorted)
-        mean_val = mean(df, count_values)
-        quant25 = quantile(df_sorted, count_values, -0.25)
-        quant50 = quantile(df_sorted, count_values, 0.5)
-        quant75 = quantile(df_sorted, count_values, 0.75)
-        diff = list(set(describe.loc["mean", :]) - set(mean_val))
-        print(diff)
+        describe_df = create_describe_dataframe(df)
+        print(describe_df)
     except Exception as error:
         print(error)
-    # print(df.describe())
 
 
 if __name__ == "__main__":
