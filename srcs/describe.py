@@ -12,7 +12,7 @@ def count(df: pd.DataFrame) -> list[int]:
     df (pd.DataFrame): the dataframe.
 
     Returns:
-    list: A list of count values for each row.
+    count (list[int]): A list of count values for each row.
     """
     num_features = df.shape[1]
     row = df.iloc[:, 0].notna()
@@ -31,9 +31,10 @@ def min(df: pd.DataFrame) -> list[float]:
     df (pd.DataFrame): the sorted dataframe.
 
     Returns:
-    list: A list of min values for each row.
+    min_values (list[float]): A list of min values for each row.
     """
-    return df.iloc[0, :].to_list()
+    min_values = df.iloc[0, :].to_list()
+    return min_values
 
 
 def max(df: pd.DataFrame) -> list[float]:
@@ -44,7 +45,7 @@ def max(df: pd.DataFrame) -> list[float]:
     df (pd.DataFrame): the sorted dataframe.
 
     Returns:
-    list: A list of max values for each row.
+    max_values (list[float]): A list of max values for each row.
     """
     num_features = df.shape[1]
     max_values = []
@@ -56,6 +57,17 @@ def max(df: pd.DataFrame) -> list[float]:
 
 
 def __parse_argument() -> str:
+    """
+    Parses arguments to expect dataset path as first positional
+    argument.
+
+    Parameters:
+    none
+
+    Returns:
+    parser.path (str): The string value of argument to process OR an error if
+    no or too many arguments.
+    """
     parser = argparse.ArgumentParser(
         description="Calculates statistical values on csv file"
         )
