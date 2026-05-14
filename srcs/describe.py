@@ -1,11 +1,10 @@
-import argparse
 import pandas as pd
 import numpy as np
-from utils import load
+from utils import load, parse_argument
 from math import sqrt, pow
 
 
-def count(df: pd.DataFrame) -> list[float]:
+def count_values(df: pd.DataFrame) -> list[float]:
     """
     Counts the number of values for each feature in dataframe.
     Excludes NaN values.
@@ -25,7 +24,7 @@ def count(df: pd.DataFrame) -> list[float]:
     return count
 
 
-def min(df: pd.DataFrame) -> list[float]:
+def min_values(df: pd.DataFrame) -> list[float]:
     """
     Returns min value for each feature in sorted dataframe.
 
@@ -39,7 +38,7 @@ def min(df: pd.DataFrame) -> list[float]:
     return min_values
 
 
-def max(df: pd.DataFrame) -> list[float]:
+def max_values(df: pd.DataFrame) -> list[float]:
     """
     Returns max value for each feature in sorted dataframe.
 
@@ -58,7 +57,7 @@ def max(df: pd.DataFrame) -> list[float]:
     return max_values
 
 
-def quantile(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
+def quantile_values(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
     """
     Returns quartile q for each feature in sorted dataframe. Uses linear type
     of interpolation as per pandas default setting : i + (j - i) * fract.
@@ -91,7 +90,7 @@ def quantile(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
     return quantile
 
 
-def std(df: pd.DataFrame, n: list[float], mean_val: list[float]) -> list[float]:
+def std_values(df: pd.DataFrame, n: list[float], mean_val: list[float]) -> list[float]:
     """
     Returns sample standard deviation for each feature in dataframe.
 
@@ -113,7 +112,7 @@ def std(df: pd.DataFrame, n: list[float], mean_val: list[float]) -> list[float]:
     return std_val
 
 
-def mean(df: pd.DataFrame, n: list[float]) -> list[float]:
+def mean_values(df: pd.DataFrame, n: list[float]) -> list[float]:
     """
     Returns the mean of all values for each feature in sorted dataframe.
 
@@ -131,26 +130,6 @@ def mean(df: pd.DataFrame, n: list[float]) -> list[float]:
         serie = df.iloc[:, col].dropna()
         means.append(float(serie.sum() / n[col]))
     return means
-
-
-def __parse_argument() -> str:
-    """
-    Parses arguments to expect dataset path as first positional
-    argument.
-
-    Parameters:
-    none
-
-    Returns:
-    parser.path (str): The string value of argument to process OR an error if
-    no or too many arguments.
-    """
-    parser = argparse.ArgumentParser(
-        description="Calculates statistical values on csv file"
-        )
-    parser.add_argument("path", type=str, help="Path of the csv file")
-    parser = parser.parse_args()
-    return parser.path
 
 
 def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -180,19 +159,19 @@ def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 "Charms", "Flying"]
     df = df[features]
     df_sorted = df.apply(lambda x: x.sort_values().values)
-    count_val = count(df_sorted)
-    mean_val = mean(df_sorted, count_val)
+    count_val = count_values(df_sorted)
+    mean_val = mean_values(df_sorted, count_val)
 
     indexes = ["count", "mean", "std", "min", "25%", "50%", "75%", "max"]
     describe_values = [
         count_val,
         mean_val,
-        std(df_sorted, count_val, mean_val),
-        min(df_sorted),
-        quantile(df_sorted, count_val, 0.25),
-        quantile(df_sorted, count_val, 0.5),
-        quantile(df_sorted, count_val, 0.75),
-        max(df_sorted)
+        std_values(df_sorted, count_val, mean_val),
+        min_values(df_sorted),
+        quantile_values(df_sorted, count_val, 0.25),
+        quantile_values(df_sorted, count_val, 0.5),
+        quantile_values(df_sorted, count_val, 0.75),
+        max_values(df_sorted)
         ]
     describe_df = pd.DataFrame(
         index=indexes,
@@ -204,7 +183,7 @@ def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def main():
     try:
-        path = __parse_argument()
+        path = parse_argument(description="Calculates statistical values on csv file")
         df = load(path)
         describe_df = create_describe_dataframe(df)
         print(describe_df)
