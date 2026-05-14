@@ -14,14 +14,14 @@ def count(df: pd.DataFrame) -> list[float]:
     df (pd.DataFrame): the dataframe.
 
     Returns:
-    count (list[float]): A list of count values for each row.
+    count (list[float]): A list of count values for each col.
     """
     num_features = df.shape[1]
-    row = df.iloc[:, 0].notna()
+    col = df.iloc[:, 0].notna()
     count = []
 
-    for row in range(num_features):
-        count.append(float(df.iloc[:, row].notna().sum()))
+    for col in range(num_features):
+        count.append(float(df.iloc[:, col].notna().sum()))
     return count
 
 
@@ -33,7 +33,7 @@ def min(df: pd.DataFrame) -> list[float]:
     df (pd.DataFrame): the sorted dataframe.
 
     Returns:
-    min_values (list[float]): A list of min values for each row.
+    min_values (list[float]): A list of min values for each col.
     """
     min_values = df.iloc[0, :].to_list()
     return min_values
@@ -47,13 +47,13 @@ def max(df: pd.DataFrame) -> list[float]:
     df (pd.DataFrame): the sorted dataframe.
 
     Returns:
-    max_values (list[float]): A list of max values for each row.
+    max_values (list[float]): A list of max values for each col.
     """
     num_features = df.shape[1]
     max_values = []
 
-    for row in range(num_features):
-        serie = pd.Series(df.iloc[:, row]).dropna()
+    for col in range(num_features):
+        serie = df.iloc[:, col].dropna()
         max_values.append(float(serie.iloc[-1]))
     return max_values
 
@@ -65,11 +65,11 @@ def quantile(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
 
     Parameters:
     df (pd.DataFrame): the sorted dataframe.
-    n (list[float]): the list of counts of values for each row.
+    n (list[float]): the list of counts of values for each col.
     q (float) : the quartile, must be between 0 and 1
 
     Returns:
-    quartile (list[float]): A list of the qth quartile for each row.
+    quartile (list[float]): A list of the qth quartile for each col.
     """
     if not 0 <= q <= 1:
         raise ValueError("describe.py: quantile(): ValueError: 'q' parameter must be between [0, 1].")
@@ -77,9 +77,9 @@ def quantile(df: pd.DataFrame, n: list[float], q: float) -> list[float]:
     num_features = df.shape[1]
     quantile = []
 
-    for row in range(num_features):
-        serie = pd.Series(df.iloc[:, row]).dropna()
-        index = (n[row] - 1) * q
+    for col in range(num_features):
+        serie = df.iloc[:, col].dropna()
+        index = (n[col] - 1) * q
         if int(index) == index:
             quantile.append(float(serie.iloc[int(index)]))
         else:
@@ -97,18 +97,18 @@ def std(df: pd.DataFrame, n: list[float], mean_val: list[float]) -> list[float]:
 
     Parameters:
     df (pd.DataFrame): the sorted dataframe.
-    n (list[float]): the list of counts of values for each row.
-    mean_val (list[float]) : the list of mean values for each row.
+    n (list[float]): the list of counts of values for each col.
+    mean_val (list[float]) : the list of mean values for each col.
 
     Returns:
-    std_val (list[float]) : a list of each row's standard deviation.
+    std_val (list[float]) : a list of each col's standard deviation.
     """
     num_features = df.shape[1]
     std_val = []
 
-    for row in range(num_features):
-        serie = pd.Series(df.iloc[:, row]).dropna()
-        var = sum([pow(x - mean_val[row], 2) for x in serie]) / (n[row] - 1)
+    for col in range(num_features):
+        serie = df.iloc[:, col].dropna()
+        var = sum([pow(x - mean_val[col], 2) for x in serie]) / (n[col] - 1)
         std_val.append(sqrt(var))
     return std_val
 
@@ -119,16 +119,17 @@ def mean(df: pd.DataFrame, n: list[float]) -> list[float]:
 
     Parameters:
     df (pd.DataFrame): the dataframe.
-    n (list[float]): the list of counts of values for each row.
+    n (list[float]): the list of counts of values for each col.
 
     Returns:
-    means (list[float]): A list of the mean for each row.
+    means (list[float]): A list of the mean for each col.
     """
     num_features = df.shape[1]
     means = []
-    for row in range(num_features):
-        serie = pd.Series(df.iloc[:, row]).dropna()
-        means.append(float(serie.sum() / n[row]))
+
+    for col in range(num_features):
+        serie = df.iloc[:, col].dropna()
+        means.append(float(serie.sum() / n[col]))
     return means
 
 
@@ -155,7 +156,7 @@ def __parse_argument() -> str:
 def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Creates description of dataframe similarly to the pandas describe function.
-    Shows for each row, excluding NaN values:
+    Shows for each col, excluding NaN values:
         - Count of values
         - Mean of values
         - Sample standard deviation of values
@@ -182,7 +183,7 @@ def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     count_val = count(df_sorted)
     mean_val = mean(df_sorted, count_val)
 
-    indexes = ["Count", "Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
+    indexes = ["count", "mean", "std", "min", "25%", "50%", "75%", "max"]
     describe_values = [
         count_val,
         mean_val,
