@@ -9,7 +9,7 @@ def count(df: pd.DataFrame) -> list[int]:
     Excludes NaN values.
 
     Parameters:
-    df (pd.DataFrame): the dataset.
+    df (pd.DataFrame): the dataframe.
 
     Returns:
     list: A list of count values for each row.
@@ -21,6 +21,38 @@ def count(df: pd.DataFrame) -> list[int]:
     for row in range(num_features):
         count.append(int(df.iloc[:, row].notna().sum()))
     return count
+
+
+def min(df: pd.DataFrame) -> list[float]:
+    """
+    Returns min value for each feature in sorted dataframe.
+
+    Parameters:
+    df (pd.DataFrame): the sorted dataframe.
+
+    Returns:
+    list: A list of min values for each row.
+    """
+    return df.iloc[0, :].to_list()
+
+
+def max(df: pd.DataFrame) -> list[float]:
+    """
+    Returns max value for each feature in sorted dataframe.
+
+    Parameters:
+    df (pd.DataFrame): the sorted dataframe.
+
+    Returns:
+    list: A list of max values for each row.
+    """
+    num_features = df.shape[1]
+    max_values = []
+
+    for row in range(num_features):
+        serie = pd.Series(df.iloc[:, row]).dropna()
+        max_values.append(float(serie.iloc[-1]))
+    return max_values
 
 
 def __parse_argument() -> str:
@@ -40,8 +72,11 @@ def main():
                 "History of Magic", "Transfiguration", "Potions",
                 "Care of Magical Creatures", "Charms", "Flying"]
     df = df[features]
+    df_sorted = df.apply(lambda x: x.sort_values().values)
     count(df)
-    # print(df.describe().to_csv())
+    min(df_sorted)
+    max(df_sorted)
+    # print(df.describe())
 
 
 if __name__ == "__main__":
