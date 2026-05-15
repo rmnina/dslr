@@ -1,6 +1,26 @@
 import pandas as pd
 import argparse
 
+def prep_df(path: str) -> pd.DataFrame :
+    df = load(path)
+    features = [
+        "Hogwarts House",
+        "Arithmancy",
+        "Astronomy",
+        "Herbology",
+        "Defense Against the Dark Arts",
+        "Divination",
+        "Ancient Runes",
+        "History of Magic",
+        "Transfiguration",
+        "Potions",
+        "Care of Magical Creatures",
+        "Charms",
+        "Flying"
+        ]
+    df = df[features]
+    return df
+
 
 def parse_argument(description: str) -> str:
     """
