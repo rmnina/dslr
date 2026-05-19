@@ -2,12 +2,21 @@ import seaborn as sns
 from utils import parse_argument, prep_df
 
 
-def main():
-    path = parse_argument(description="Displays a histogtam of dataset")
+def save_histogram(x: str) -> None:
+    """
+    Create a histogram of one selected dataset feature and save it as a PNG image.
+
+    Parameters:
+        x (str): Feature selected for histogram.
+
+    Returns:
+        None
+    """
+    path = parse_argument(description="Displays a histogram of one selected dataset feature")
     df = prep_df(path)
     sns_plot = sns.histplot(
         data=df,
-        x="Care of Magical Creatures",
+        x=x,
         hue="Hogwarts House",
         hue_order=["Ravenclaw", "Hufflepuff", "Slytherin", "Gryffindor"]
         ).set_title(
@@ -19,4 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    save_histogram(x="Care of Magical Creatures")

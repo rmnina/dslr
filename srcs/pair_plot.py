@@ -2,7 +2,16 @@ import seaborn as sns
 from utils import parse_argument, prep_df
 
 
-def main():
+def save_pair_plot() -> None:
+    """
+    Create a pair plot and save it as a PNG image.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     path = parse_argument(description="Displays a pair plot of dataset")
     df = prep_df(path)
     sns_plot = sns.pairplot(
@@ -16,4 +25,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    save_pair_plot()
