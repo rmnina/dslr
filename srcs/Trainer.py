@@ -22,6 +22,8 @@ class Trainer:
         
         self.m, self.n = X_train.shape
         self.m_eval, self.n_eval = X_eval.shape
+        
+        np.random.seed(self.seed)
         self.W = np.random.rand(self.n)
         self.b = np.random.rand()
         
