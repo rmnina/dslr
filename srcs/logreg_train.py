@@ -9,7 +9,8 @@ SEED = 21
 EVAL_DATASET_SIZE = 0.2
 
 def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
-    #TODO: check if EVAL_DATASET_SIZE between 0 and 1
+    if not 0 < EVAL_DATASET_SIZE < 1:
+        raise Exception("split_dataset(): EVAL_DATASET_SIZE must be between 0 and 1.")
     m = X.shape[0]
     random.seed(SEED)
     eval_idx = random.sample(range(m), int(m * eval_size))
@@ -24,7 +25,7 @@ def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.nd
     
     
 def ft_normalize(X: np.ndarray, min_train: float, max_train:float) -> np.ndarray:
-    return (X - min_train) / (max_train - min_train) 
+    return (X - min_train) / ((max_train - min_train) + 1e-20) 
 
 
 def test(X_eval, y_eval, W, b) -> None:
@@ -49,36 +50,37 @@ def normalize_features(X_train, X_eval) -> tuple[np.ndarray]:
     return (X_train, X_eval)
 
 def main():
-    df = load("datasets/dataset_train.csv")
-    features = [
-        "Astronomy",
-        "Herbology",
-        "Defense Against the Dark Arts",
-        "Divination",
-        "History of Magic",
-        "Transfiguration",
-        "Charms",
-        "Flying",
-        "Hogwarts House",
-    ]
-    df = df[features]
-    label = features.pop()
-    X = df[features]
-    y = df.loc[:, label]
-    
-    np.random.seed(SEED)
-    X_train, X_eval, y_train, y_eval = split_dataset(X, y, EVAL_DATASET_SIZE)
-    X_train.fillna(X_train.mean(), inplace=True)
-    X_eval.fillna(X_eval.mean(), inplace=True)
-    
-    X_train = X_train.to_numpy()
-    X_eval = X_eval.to_numpy()
-    y_train = y_train.to_numpy()
-    y_eval = y_eval.to_numpy()
-
-    X_train, X_eval = normalize_features(X_train, X_eval)    
-
     try:
+        df = load("datasets/dataset_train.csv")
+        features = [
+            "Astronomy",
+            "Herbology",
+            "Defense Against the Dark Arts",
+            "Divination",
+            "History of Magic",
+            "Transfiguration",
+            "Charms",
+            "Flying",
+            "Hogwarts House",
+        ]
+        df = df[features]
+        label = features.pop()
+        X = df[features]
+        y = df.loc[:, label]
+        
+        np.random.seed(SEED)
+        X_train, X_eval, y_train, y_eval = split_dataset(X, y, EVAL_DATASET_SIZE)
+        X_train.fillna(X_train.mean(), inplace=True)
+        X_eval.fillna(X_eval.mean(), inplace=True)
+        
+        X_train = X_train.to_numpy()
+        X_eval = X_eval.to_numpy()
+        y_train = y_train.to_numpy()
+        y_eval = y_eval.to_numpy()
+
+        X_train, X_eval = normalize_features(X_train, X_eval)    
+
+
         ovr = OVR(X_train, y_train, X_eval, y_eval, seed=SEED)
         ovr.fit()
         test(X_eval, y_eval, ovr.W, ovr.b)
