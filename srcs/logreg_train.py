@@ -1,7 +1,7 @@
 from utils import load
 import numpy as np
 import matplotlib.pyplot as plt
-from Trainer import Trainer
+from srcs.LogisticRegression import LogisticRegression
 import random
 
 THRESHOLD = 0.5
@@ -30,7 +30,7 @@ def ft_normalize(X: np.ndarray, min_train: float, max_train:float) -> np.ndarray
 
 def test(X_test, y_test, W, b):
     # test_preds = ft_predict(X_test, W, b)
-    test_preds = Trainer.predict(X_test, W, b)
+    test_preds = LogisticRegression.predict(X_test, W, b)
     success = 0
     for i in range(len(X_test)):
         if test_preds[i] >= 0.5:
@@ -84,7 +84,7 @@ def main():
     X_train = ft_normalize(X_train, min_train, max_train)
     X_eval = ft_normalize(X_eval, min_train, max_train)
 
-    model = Trainer(X_train, y_train, X_eval, y_eval, seed=SEED)
+    model = LogisticRegression(X_train, y_train, X_eval, y_eval, seed=SEED)
     model.fit()
     test(X_eval, y_eval, model.W, model.b)
 

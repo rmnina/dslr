@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Trainer:
+class LogisticRegression:
     def __init__(
         self,
         X_train: np.ndarray,
