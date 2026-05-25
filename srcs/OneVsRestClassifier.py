@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 class OneVsRestClassifierException(Exception):
@@ -40,6 +41,7 @@ class OneVsRestClassifier:
         # print(self.class_count)
         # print(f"W = {self.W}")
         # print(f"B = {self.b}")
+        self.one_hot_encoding()
         # self.Y_one_hot
 
     def get_class_count(self) -> int:
@@ -49,8 +51,8 @@ class OneVsRestClassifier:
         self.class_count = len(self.classes_train.values)
 
     def get_distribution(self) -> None:
-        total_train = len(self.y_train)
-        total_eval = len(self.y_eval)
+        total_train = self.y_train.size
+        total_eval = self.y_eval.size
 
         print("Class distribution in training dataset:")
 
@@ -67,4 +69,9 @@ class OneVsRestClassifier:
             print(f"{cls} : {(percentage):.2f}% ({count}/{total_eval})")
 
     def one_hot_encoding(self) -> np.ndarray:
-        pass
+        class_mapping = {}
+        for i, cls in enumerate(self.classes_train.values):
+            class_mapping[cls] = i
+        y_train_mapped = pd.Series(self.y_train).map(class_mapping).to_numpy()
+        self.y_train_one_hot = np.zeros((self.y_train.size, self.class_count))
+        self.y_train_one_hot[np.arange(self.y_train.size), y_train_mapped] = 1

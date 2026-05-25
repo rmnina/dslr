@@ -35,7 +35,7 @@ class LogisticRegression:
     @staticmethod
     def predict(X, W, b) -> np.ndarray:
         z = np.dot(X, W) + b
-        preds = Trainer.sigmoid(z)
+        preds = LogisticRegression.sigmoid(z)
         return preds
 
     def compute_cost(self, y: np.ndarray, pred: np.ndarray) -> int:
@@ -43,7 +43,7 @@ class LogisticRegression:
 
     def fit(self) -> None:
         for i in range(self.iteration):
-            preds = Trainer.predict(self.X_train, self.W, self.b)
+            preds = LogisticRegression.predict(self.X_train, self.W, self.b)
             errors = preds - self.y_train
             dW = np.dot(self.X_train.T, errors) / self.m
             db = errors.sum() / self.m
