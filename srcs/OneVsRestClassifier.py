@@ -6,6 +6,7 @@ class OneVsRestClassifierException(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 class OneVsRestClassifier:
     def __init__(
         self,
@@ -16,7 +17,7 @@ class OneVsRestClassifier:
         seed: int = 42,
         learning_rate: float = 2e-2,
         iteration: int = 4000,
-        ):
+                ):
         self.X_train = X_train
         self.y_train = y_train
         self.X_eval = X_eval
@@ -26,7 +27,7 @@ class OneVsRestClassifier:
         self.iteration = iteration
 
         self.m, self.n = X_train.shape
-        self.m_eval, self.n_eval = X_eval.shape 
+        self.m_eval, self.n_eval = X_eval.shape
 
         self.classes_train = np.unique_counts(self.y_train)
         self.classes_eval = np.unique_counts(self.y_eval)
@@ -36,25 +37,34 @@ class OneVsRestClassifier:
         self.get_distribution()
         self.W = [np.random.rand(self.n) for _ in range(self.class_count)]
         self.b = [np.random.rand() for _ in range(self.class_count)]
-        print(self.class_count)
+        # print(self.class_count)
         # print(f"W = {self.W}")
         # print(f"B = {self.b}")
         # self.Y_one_hot
-    
-    def get_class_count(self) -> int:     
+
+    def get_class_count(self) -> int:
         print(self.classes_train.values, self.classes_eval.values)
         if not np.array_equal(self.classes_train.values, self.classes_eval.values):
             raise OneVsRestClassifierException("Different class count between train set and eval set")
         self.class_count = len(self.classes_train.values)
-        
+
     def get_distribution(self) -> None:
+        total_train = len(self.y_train)
+        total_eval = len(self.y_eval)
+
         print("Class distribution in training dataset:")
+
         for i, cls in enumerate(self.classes_train.values):
-            print(f"{cls} : {(self.classes_train.counts[i] / len(self.y_train) * 100):.2f}% ({self.classes_train.counts[i]}/{len(self.y_train)})")
+            count = self.classes_train.counts[i]
+            percentage = count / total_train * 100
+            print(f"{cls} : {percentage:.2f}% ({count}/{total_train})")
+
         print("\nClass distribution in eval dataset:")
+
         for i, cls in enumerate(self.classes_eval.values):
-            print(f"{cls} : {(self.classes_eval.counts[i] / len(self.y_eval) * 100):.2f}% ({self.classes_eval.counts[i]}/{len(self.y_eval)})")
-        
-        
+            count = self.classes_eval.counts[i]
+            percentage = count / total_eval * 100
+            print(f"{cls} : {(percentage):.2f}% ({count}/{total_eval})")
+
     def one_hot_encoding(self) -> np.ndarray:
         pass
