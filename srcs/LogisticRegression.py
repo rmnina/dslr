@@ -10,7 +10,7 @@ class LogisticRegression:
         y_eval: np.ndarray,
         seed: int = 42,
         learning_rate: float = 2e-2,
-        iteration: int = 4000
+        iteration: int = 5000
                 ):
 
         self.X_train = X_train
@@ -50,7 +50,7 @@ class LogisticRegression:
             self.W -= self.learning_rate * dW
             self.b -= self.learning_rate * db
 
-            if i % (self.iteration // 20) == 0:
+            if i % (self.iteration // 10) == 0:
                 test_preds = self.predict(self.X_eval, self.W, self.b)
                 cost = self.compute_cost(self.y_eval, test_preds)
-                print(cost)
+                print(f"Iteration: {i + 1} | cost: {cost}")

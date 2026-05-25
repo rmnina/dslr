@@ -1,11 +1,11 @@
 from utils import load
 import numpy as np
-import matplotlib.pyplot as plt
-from srcs.LogisticRegression import LogisticRegression
 import random
+from OneVsRestClassifier import OneVsRestClassifier as OVR
+import pandas as pd
 
 THRESHOLD = 0.5
-SEED = 42
+SEED = 21
 EVAL_DATASET_SIZE = 0.2
 
 def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
@@ -23,29 +23,30 @@ def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.nd
     return X_train, X_eval, y_train, y_eval
     
     
-
 def ft_normalize(X: np.ndarray, min_train: float, max_train:float) -> np.ndarray:
     return (X - min_train) / (max_train - min_train) 
 
 
-def test(X_test, y_test, W, b):
-    # test_preds = ft_predict(X_test, W, b)
-    test_preds = LogisticRegression.predict(X_test, W, b)
+def test(X_eval, y_eval, W, b) -> None:
+
+    class_mapping = {"Gryffindor": 0, "Hufflepuff": 1, "Ravenclaw": 2, "Slytherin": 3}
+    y_eval_mapped = pd.Series(y_eval).map(class_mapping).to_numpy()
+    preds = OVR.predict(X_eval, W, b)
     success = 0
-    for i in range(len(X_test)):
-        if test_preds[i] >= 0.5:
-            griffondor = 1
-        else:
-            griffondor = 0
-        if griffondor == y_test[i]:
+
+    for i in range(len(X_eval)):
+        if preds[i] == y_eval_mapped[i]:
             success += 1
-    #     print(f"Pred: {test_preds[i]} / truth: {y_test[i]}")
-    print(f"success rate: {(success / len(X_test) * 100):.2f}%")
+    print(f"success rate: {(success / len(X_eval) * 100):.2f}%")
 
 
-def one_versus_all(X_train: np.ndarray, y_train: np.ndarray, X_eval: np.ndarray, y_eval: np.ndarray) -> None:
-    pass
-    
+def normalize_features(X_train, X_eval) -> tuple[np.ndarray]:
+    min_train = X_train.min(axis=0)
+    max_train = X_train.max(axis=0)
+
+    X_train = ft_normalize(X_train, min_train, max_train)
+    X_eval = ft_normalize(X_eval, min_train, max_train)
+    return (X_train, X_eval)
 
 def main():
     df = load("datasets/dataset_train.csv")
@@ -63,8 +64,7 @@ def main():
     df = df[features]
     label = features.pop()
     X = df[features]
-    house_mapping = {"Gryffindor": 1, "Slytherin": 0, "Ravenclaw": 0, "Hufflepuff": 0}
-    y = df.loc[:, label].map(house_mapping)
+    y = df.loc[:, label]
     
     np.random.seed(SEED)
     X_train, X_eval, y_train, y_eval = split_dataset(X, y, EVAL_DATASET_SIZE)
@@ -75,19 +75,16 @@ def main():
     X_eval = X_eval.to_numpy()
     y_train = y_train.to_numpy()
     y_eval = y_eval.to_numpy()
-    
-    print(X_train.shape, X_eval.shape, y_train.shape, y_eval.shape)
-    
-    min_train = X_train.min(axis=0)
-    max_train = X_train.max(axis=0)
 
-    X_train = ft_normalize(X_train, min_train, max_train)
-    X_eval = ft_normalize(X_eval, min_train, max_train)
+    X_train, X_eval = normalize_features(X_train, X_eval)    
 
-    model = LogisticRegression(X_train, y_train, X_eval, y_eval, seed=SEED)
-    model.fit()
-    test(X_eval, y_eval, model.W, model.b)
+    try:
+        ovr = OVR(X_train, y_train, X_eval, y_eval, seed=SEED)
+        ovr.fit()
+        test(X_eval, y_eval, ovr.W, ovr.b)
 
+    except Exception as e:
+        print(f"{e.__class__.__name__}: {e}")
 
 if __name__ == "__main__":
     main()

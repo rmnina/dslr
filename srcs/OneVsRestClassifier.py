@@ -18,7 +18,7 @@ class OneVsRestClassifier:
         y_eval: np.ndarray,
         seed: int = 42,
         learning_rate: float = 2e-2,
-        iteration: int = 4000,
+        iteration: int = 5000,
                 ):
         self.X_train = X_train
         self.y_train = y_train
@@ -35,25 +35,21 @@ class OneVsRestClassifier:
         self.classes_eval = np.unique_counts(self.y_eval)
 
         np.random.seed(self.seed)
-        self.get_class_count()
-        self.get_distribution()
+        self.class_count = self.get_class_count()
+
         self.W = [0] * self.class_count
         self.b = [0] * self.class_count
-        # print(self.class_count)
-        # print(f"W = {self.W}")
-        # print(f"B = {self.b}")
+
         self.y_train_mapped, self.y_eval_mapped = self.label_mapping()
         self.y_train_one_hot, self.y_eval_one_hot = self.one_hot_encoding()
         self.models = [0] * self.class_count
-        self.fit()
-        OneVsRestClassifier.predict(X_train, self.W, self.b)
-        # self.Y_one_hot
+
 
     def get_class_count(self) -> int:
-        print(self.classes_train.values, self.classes_eval.values)
         if not np.array_equal(self.classes_train.values, self.classes_eval.values):
             raise OneVsRestClassifierException("Different class count between train set and eval set")
-        self.class_count = len(self.classes_train.values)
+        class_count = len(self.classes_train.values)
+        return class_count
 
     def get_distribution(self) -> None:
         total_train = self.y_train.size
@@ -73,6 +69,7 @@ class OneVsRestClassifier:
             percentage = count / total_eval * 100
             print(f"{cls} : {(percentage):.2f}% ({count}/{total_eval})")
 
+
     def label_mapping(self) -> tuple[np.ndarray]:
         class_mapping = {}
         for i, cls in enumerate(self.classes_train.values):
@@ -80,6 +77,7 @@ class OneVsRestClassifier:
         y_train_mapped = pd.Series(self.y_train).map(class_mapping).to_numpy()
         y_eval_mapped = pd.Series(self.y_eval).map(class_mapping).to_numpy()
         return (y_train_mapped, y_eval_mapped)
+
 
     def one_hot_encoding(self) -> tuple[np.ndarray]:
         y_train_one_hot = np.zeros((self.y_train.size, self.class_count))
@@ -93,16 +91,21 @@ class OneVsRestClassifier:
     def fit(self) -> None:
 
         for i in range(self.class_count):
+            print(f"\nTraining of classifier '{self.classes_train.values[i]}':")
             self.models[i] = LogisticRegression(
                 self.X_train,
                 self.y_train_one_hot[:, i],
                 self.X_eval,
-                self.y_eval_one_hot[:, i]
+                self.y_eval_one_hot[:, i],
+                seed=self.seed,
+                learning_rate=self.learning_rate,
+                iteration=self.iteration
                 )
             self.models[i].fit()
             self.W[i] = self.models[i].W
             self.b[i] = self.models[i].b
-
+            
+    @staticmethod
     def predict(X, W, b) -> np.ndarray:
         P = np.ndarray((len(W), X.shape[0]))
 
