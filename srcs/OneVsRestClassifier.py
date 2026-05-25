@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from LogisticRegression import LogisticRegression
 
 
 class OneVsRestClassifierException(Exception):
@@ -36,12 +37,16 @@ class OneVsRestClassifier:
         np.random.seed(self.seed)
         self.get_class_count()
         self.get_distribution()
-        self.W = [np.random.rand(self.n) for _ in range(self.class_count)]
-        self.b = [np.random.rand() for _ in range(self.class_count)]
+        self.W = [0] * self.class_count
+        self.b = [0] * self.class_count
         # print(self.class_count)
         # print(f"W = {self.W}")
         # print(f"B = {self.b}")
-        self.one_hot_encoding()
+        self.y_train_mapped, self.y_eval_mapped = self.label_mapping()
+        self.y_train_one_hot, self.y_eval_one_hot = self.one_hot_encoding()
+        self.models = [0] * self.class_count
+        self.fit()
+        OneVsRestClassifier.predict(X_train, self.W, self.b)
         # self.Y_one_hot
 
     def get_class_count(self) -> int:
@@ -68,10 +73,40 @@ class OneVsRestClassifier:
             percentage = count / total_eval * 100
             print(f"{cls} : {(percentage):.2f}% ({count}/{total_eval})")
 
-    def one_hot_encoding(self) -> np.ndarray:
+    def label_mapping(self) -> tuple[np.ndarray]:
         class_mapping = {}
         for i, cls in enumerate(self.classes_train.values):
             class_mapping[cls] = i
         y_train_mapped = pd.Series(self.y_train).map(class_mapping).to_numpy()
-        self.y_train_one_hot = np.zeros((self.y_train.size, self.class_count))
-        self.y_train_one_hot[np.arange(self.y_train.size), y_train_mapped] = 1
+        y_eval_mapped = pd.Series(self.y_eval).map(class_mapping).to_numpy()
+        return (y_train_mapped, y_eval_mapped)
+
+    def one_hot_encoding(self) -> tuple[np.ndarray]:
+        y_train_one_hot = np.zeros((self.y_train.size, self.class_count))
+        y_eval_one_hot = np.zeros((self.y_eval.size, self.class_count))
+
+        y_train_one_hot[np.arange(self.y_train.size), self.y_train_mapped] = 1
+        y_eval_one_hot[np.arange(self.y_eval.size), self.y_eval_mapped] = 1
+
+        return (y_train_one_hot, y_eval_one_hot)
+
+    def fit(self) -> None:
+
+        for i in range(self.class_count):
+            self.models[i] = LogisticRegression(
+                self.X_train,
+                self.y_train_one_hot[:, i],
+                self.X_eval,
+                self.y_eval_one_hot[:, i]
+                )
+            self.models[i].fit()
+            self.W[i] = self.models[i].W
+            self.b[i] = self.models[i].b
+
+    def predict(X, W, b) -> np.ndarray:
+        P = np.ndarray((len(W), X.shape[0]))
+
+        for i in range(len(W)):
+            P[i] = LogisticRegression.predict(X, W[i], b[i])
+        preds = np.argmax(P, axis=0)
+        return (preds)
