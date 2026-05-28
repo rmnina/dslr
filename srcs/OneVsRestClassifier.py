@@ -13,6 +13,9 @@ class OneVsRestClassifierException(Exception):
 
 
 class OneVsRestClassifier:
+    """
+    Docstring.
+    """
     def __init__(
         self,
         X_train: np.ndarray,
