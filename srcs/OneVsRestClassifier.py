@@ -23,6 +23,8 @@ class OneVsRestClassifier:
         y_train: np.ndarray,
         X_eval: np.ndarray,
         y_eval: np.ndarray,
+        min_train: np.ndarray,
+        max_train: np.ndarray,
         seed: int = 42,
         learning_rate: float = 2e-2,
         iteration: int = 5000,
@@ -31,6 +33,8 @@ class OneVsRestClassifier:
         self.y_train = y_train
         self.X_eval = X_eval
         self.y_eval = y_eval
+        self.min_train = min_train
+        self.max_train = max_train
         self.seed = seed
         self.learning_rate = learning_rate
         self.iteration = iteration
@@ -176,11 +180,17 @@ class OneVsRestClassifier:
         return preds
 
     def save_model(self, model_path: str):
+        
         with open(model_path, "wb") as file:
-            pickle.dump(obj=(self.W, self.b), file=file)
+            pickle.dump(obj={
+                "weights": self.W,
+                "bias": self.b,
+                "min_train": self.min_train,
+                "max_train": self.max_train
+                }, file=file)
             
     @staticmethod
     def load_model(model_path: str):
         with open(model_path, "rb") as file:
-            W, b = pickle.load(file)
-        return W, b
+            obj = pickle.load(file)
+        return obj

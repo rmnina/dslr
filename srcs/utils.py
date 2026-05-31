@@ -1,5 +1,24 @@
 import pandas as pd
 import argparse
+import numpy as np
+
+
+def ft_normalize(X: np.ndarray, min_train: np.ndarray, max_train: np.ndarray) -> np.ndarray:
+    """
+    Normalizes the values contained in the array passed as an argument according to the
+    minimum and maximum values of the training dataset.
+    Adds 1e-20 to the result in order to avoid potential divisions by 0.
+    
+    Args:
+        X (np.ndarray): Array in which the values will be normalized;
+        min_train (float): Minimum value in the training array.
+        max_train (float): Maximum value in the training array.
+
+    Returns:
+        (np.ndarray): The resulting normalized array.
+
+    """
+    return (X - min_train) / ((max_train - min_train) + 1e-20) 
 
 
 def prep_df(path: str) -> pd.DataFrame:

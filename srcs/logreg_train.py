@@ -1,4 +1,4 @@
-from utils import load
+from utils import load, ft_normalize
 import numpy as np
 import random
 from OneVsRestClassifier import OneVsRestClassifier as OVR
@@ -7,6 +7,7 @@ import pandas as pd
 THRESHOLD = 0.5
 SEED = 21
 EVAL_DATASET_SIZE = 0.2
+
 
 def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
     """
@@ -43,24 +44,6 @@ def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.nd
     y_eval = y.iloc[eval_idx]
 
     return X_train, X_eval, y_train, y_eval
-    
-    
-def ft_normalize(X: np.ndarray, min_train: float, max_train:float) -> np.ndarray:
-    """
-    Normalizes the values contained in the array passed as an argument according to the
-    minimum and maximum values of the training dataset.
-    Adds 1e-20 to the result in order to avoid potential divisions by 0.
-    
-    Args:
-        X (np.ndarray): Array in which the values will be normalized;
-        min_train (float): Minimum value in the training array.
-        max_train (float): Maximum value in the training array.
-
-    Returns:
-        (np.ndarray): The resulting normalized array.
-
-    """
-    return (X - min_train) / ((max_train - min_train) + 1e-20) 
 
 
 def test(X_eval, y_eval, W, b) -> None:
@@ -75,25 +58,6 @@ def test(X_eval, y_eval, W, b) -> None:
             success += 1
     print(f"success rate: {(success / len(X_eval) * 100):.2f}%")
 
-
-def normalize_features(X_train: np.ndarray, X_eval: np.ndarray) -> tuple[np.ndarray]:
-    """
-    Applies ft_normalized to both the training and evaluating datasets.
-
-    Args:
-    X_train (np.ndarray): The training dataset to be normalized.
-    X_eval (np.ndarray): The evaluating dataset to be normalized.
-
-    Returns:
-    X_train, X_eval (tuple[np.ndarray]): A tuple containing the resulting
-    normalized datasets.
-    """
-    min_train = X_train.min(axis=0)
-    max_train = X_train.max(axis=0)
-
-    X_train = ft_normalize(X_train, min_train, max_train)
-    X_eval = ft_normalize(X_eval, min_train, max_train)
-    return (X_train, X_eval)
 
 def main():
     try:
@@ -123,16 +87,21 @@ def main():
         X_eval = X_eval.to_numpy()
         y_train = y_train.to_numpy()
         y_eval = y_eval.to_numpy()
+        
+        min_train = X_train.min(axis=0)
+        max_train = X_train.max(axis=0)
+        X_train = ft_normalize(X_train, min_train, max_train)    
+        X_eval = ft_normalize(X_eval, min_train, max_train)    
 
-        X_train, X_eval = normalize_features(X_train, X_eval)    
-
-
-        ovr = OVR(X_train, y_train, X_eval, y_eval, seed=SEED)
+        ovr = OVR(X_train, y_train, X_eval, y_eval, min_train, max_train, seed=SEED)
         ovr.fit()
         test(X_eval, y_eval, ovr.W, ovr.b)
+        ovr.save_model("model.pkl")
+        print("model saved in model.pkl")
 
     except Exception as e:
         print(f"{e.__class__.__name__}: {e}")
+
 
 if __name__ == "__main__":
     main()
