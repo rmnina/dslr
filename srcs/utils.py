@@ -39,6 +39,7 @@ def prep_df(path: str) -> pd.DataFrame:
         "Herbology",
         "Defense Against the Dark Arts",
         "Divination",
+        "Muggle Studies",
         "Ancient Runes",
         "History of Magic",
         "Transfiguration",

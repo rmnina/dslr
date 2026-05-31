@@ -5,8 +5,10 @@ from OneVsRestClassifier import OneVsRestClassifier as OVR
 import pandas as pd
 
 THRESHOLD = 0.5
-SEED = 21
+SEED = 13
 EVAL_DATASET_SIZE = 0.2
+LEARNING_RATE = 2e-2
+ITERATION = 5000
 
 
 def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
@@ -47,7 +49,6 @@ def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.nd
 
 
 def test(X_eval, y_eval, W, b) -> None:
-
     class_mapping = {"Gryffindor": 0, "Hufflepuff": 1, "Ravenclaw": 2, "Slytherin": 3}
     y_eval_mapped = pd.Series(y_eval).map(class_mapping).to_numpy()
     preds = OVR.predict(X_eval, W, b)
@@ -56,7 +57,7 @@ def test(X_eval, y_eval, W, b) -> None:
     for i in range(len(X_eval)):
         if preds[i] == y_eval_mapped[i]:
             success += 1
-    print(f"success rate: {(success / len(X_eval) * 100):.2f}%")
+    print(f"Accuracy: {(success / len(X_eval) * 100):.2f}%")
 
 
 def main():
@@ -67,10 +68,12 @@ def main():
             "Herbology",
             "Defense Against the Dark Arts",
             "Divination",
+            "Muggle Studies",
             "History of Magic",
             "Transfiguration",
             "Charms",
             "Flying",
+            "Ancient Runes",
             "Hogwarts House",
         ]
         df = df[features]
@@ -85,15 +88,23 @@ def main():
         
         X_train = X_train.to_numpy()
         X_eval = X_eval.to_numpy()
-        y_train = y_train.to_numpy()
-        y_eval = y_eval.to_numpy()
         
         min_train = X_train.min(axis=0)
         max_train = X_train.max(axis=0)
         X_train = ft_normalize(X_train, min_train, max_train)    
         X_eval = ft_normalize(X_eval, min_train, max_train)    
 
-        ovr = OVR(X_train, y_train, X_eval, y_eval, min_train, max_train, seed=SEED)
+        ovr = OVR(
+            X_train=X_train,
+            y_train=y_train,
+            X_eval=X_eval,
+            y_eval=y_eval,
+            min_train=min_train,
+            max_train=max_train,
+            seed=SEED,
+            learning_rate=LEARNING_RATE,
+            iteration=ITERATION
+                )
         ovr.fit()
         test(X_eval, y_eval, ovr.W, ovr.b)
         ovr.save_model("model.pkl")
