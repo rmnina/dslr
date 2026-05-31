@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 from LogisticRegression import LogisticRegression
 
 
@@ -170,3 +171,13 @@ class OneVsRestClassifier:
             P[i] = LogisticRegression.predict(X, W[i], b[i])
         preds = np.argmax(P, axis=0)
         return preds
+
+    def save_model(self, model_path: str):
+        with open(model_path, "wb") as file:
+            pickle.dump(obj=(self.W, self.b), file=file)
+            
+    @staticmethod
+    def load_model(model_path: str):
+        with open(model_path, "rb") as file:
+            W, b = pickle.load(file)
+        return W, b
