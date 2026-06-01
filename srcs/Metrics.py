@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Metrics():
-    
+
     def __init__(
         self,
         y_true: np.ndarray,
@@ -22,8 +23,7 @@ class Metrics():
         self.f1 = self.get_F1_score()
         self.f1_macro = self.get_F1_macro()
 
-
-    def count_positive_negative(self)-> tuple[np.ndarray]:
+    def count_positive_negative(self) -> tuple[np.ndarray]:
         TP = [0] * self.class_count
         FP = [0] * self.class_count
         TN = [0] * self.class_count
@@ -39,8 +39,7 @@ class Metrics():
                 if self.y_pred[j] != i and self.y_true[j] == i:
                     FN[i] += 1
         return (np.array(TP), np.array(FP), np.array(TN), np.array(FN))
-        
-    
+
     def classification_report(self, digits: int = 4, width: int = 12):
         width = "<" + str(width)
         float_prec = "." + str(digits) + "f"
@@ -48,6 +47,7 @@ class Metrics():
         buffer += f"{"recall":{width}}"
         buffer += f"{"f1-score":{width}}"
         buffer += f"{"support":{width}} \n"
+
         for i, target in enumerate(self.target_names):
             buffer += f"{target:{width}}"
             buffer += f"{self.precision[i]:{width}{float_prec}}"
@@ -57,24 +57,23 @@ class Metrics():
         buffer += f"\n{"accuracy":{width}}{"":{width}}{"":{width}}"
         buffer += f"{self.global_accuracy:{width}{float_prec}}"
         buffer += f"{sum(self.support):{width}}\n"
-        
+
         buffer += f"{"f1-macro":{width}}{"":{width}}{"":{width}}"
         buffer += f"{self.f1_macro:{width}{float_prec}}"
         buffer += f"{sum(self.support):{width}}\n"
         return buffer
-        
-    
+
     def get_recall(self):
         return (self.TP / (self.TP + self.FN))
-    
+
     def get_accuracy(self, global_accuracy: bool = False):
         if global_accuracy:
             return self.TP.sum() / self.support.sum()
         return (self.TP + self.TN) / self.support.sum()
-    
+
     def get_precision(self):
         return self.TP / (self.TP + self.FP)
-    
+
     def get_F1_score(self):
         return (2 * (self.precision * self.recall) / (self.precision + self.recall))
 
