@@ -132,6 +132,23 @@ def mean_values(df: pd.DataFrame, n: list[float]) -> list[float]:
     return means
 
 
+def get_distribution(df: pd.DataFrame, y_labels: pd.DataFrame) -> None:
+    """
+    Prints distribution of each class for training and evaluation datasets.
+    """
+    total = df.shape[0]
+    unique_counts = np.unique_counts(y_labels)
+
+    print("\n======= Class distribution in dataset =======\n")
+
+    for i, cls in enumerate(unique_counts.values):
+        count = unique_counts.counts[i]
+        percentage = count / total * 100
+        print(f"\t{cls} : {percentage:.2f}% ({count}/{total})")
+        
+    print("\n=============================================\n")
+
+
 def create_describe_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Creates description of dataframe similarly to the pandas describe function.
@@ -187,6 +204,7 @@ def main():
         df = load(path)
         describe_df = create_describe_dataframe(df)
         print(describe_df)
+        get_distribution(df, df.loc[:,"Hogwarts House"])
     except Exception as error:
         print(error)
 
