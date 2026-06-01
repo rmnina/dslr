@@ -1,10 +1,9 @@
-from utils import load, ft_normalize
+from utils import load, ft_normalize, split_dataset
 import numpy as np
-import random
 from OneVsRestClassifier import OneVsRestClassifier as OVR
 import pandas as pd
 from Metrics import Metrics
-import sklearn
+import argparse
 
 THRESHOLD = 0.5
 SEED = 13
@@ -12,43 +11,6 @@ EVAL_DATASET_SIZE = 0.2
 LEARNING_RATE = 2e-2
 ITERATION = 5000
 SAVE_CM = True
-
-
-def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
-    """
-    Splits each of the two original datasets into, for each original:
-        - One training dataset
-        - One evaluating dataset
-    The split is operated according to the _eval_size_ proportion.
-    Example:
-        _eval_size_ = 0.2 -> The resulting evaluating datasets will consist
-        in 20% of the original datasets. Therefore, the resulting training datasets
-        will consist in the remaining 80% of the original datasets.
-    The split is made at random to ensure representativity in each resulting dataset.
-
-    Args:
-        X (np.ndarray): The original dataset to split, containing the labels.
-        y (np.ndarray): The original dataset to split containing the classes.
-        eval_size (float): The proportion of the resulting eval datasets, relatively to
-        the original datasets.
-
-    Returns:
-        X_train, y_train, X_eval, y_eval (tuple[np.ndarray]) : The training and evaluating
-        datasets retrieved from the two original datasets.
-    """
-    if not 0 < EVAL_DATASET_SIZE < 1:
-        raise Exception("split_dataset(): EVAL_DATASET_SIZE must be between 0 and 1.")
-    m = X.shape[0]
-    random.seed(SEED)
-    eval_idx = random.sample(range(m), int(m * eval_size))
-    train_idx = list(set((range(m))) - set(eval_idx))
-
-    X_train = X.iloc[train_idx, :]
-    y_train = y.iloc[train_idx]
-    X_eval = X.iloc[eval_idx, :]
-    y_eval = y.iloc[eval_idx]
-
-    return X_train, X_eval, y_train, y_eval
 
 
 def test(X_eval, y_eval, W, b) -> None:
@@ -68,9 +30,17 @@ def test(X_eval, y_eval, W, b) -> None:
         print("Confusion matrix saved in 'data_visualization/confusion_matrix.png'")
 
 
+def parse_arguments() -> str:
+    parser = argparse.ArgumentParser("Training script, takes train dataset as parameter.")
+    parser.add_argument("--dataset", "-d", type=str, required=True, help="Path of dataset")
+    args = parser.parse_args()
+    return args.dataset
+
+
 def main():
     try:
-        df = load("datasets/dataset_train.csv")
+        dataset_path = parse_arguments()
+        df = load(dataset_path)
         features = [
             "Astronomy",
             "Herbology",
@@ -90,7 +60,7 @@ def main():
         y = df.loc[:, label]
         
         np.random.seed(SEED)
-        X_train, X_eval, y_train, y_eval = split_dataset(X, y, EVAL_DATASET_SIZE)
+        X_train, X_eval, y_train, y_eval = split_dataset(X, y, EVAL_DATASET_SIZE, SEED)
         X_train.fillna(X_train.mean(), inplace=True)
         X_eval.fillna(X_eval.mean(), inplace=True)
         
