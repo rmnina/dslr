@@ -3,6 +3,7 @@ import numpy as np
 import random
 from OneVsRestClassifier import OneVsRestClassifier as OVR
 import pandas as pd
+from Metrics import Metrics
 
 THRESHOLD = 0.5
 SEED = 13
@@ -52,12 +53,11 @@ def test(X_eval, y_eval, W, b) -> None:
     class_mapping = {"Gryffindor": 0, "Hufflepuff": 1, "Ravenclaw": 2, "Slytherin": 3}
     y_eval_mapped = pd.Series(y_eval).map(class_mapping).to_numpy()
     preds = OVR.predict(X_eval, W, b)
-    success = 0
 
-    for i in range(len(X_eval)):
-        if preds[i] == y_eval_mapped[i]:
-            success += 1
-    print(f"Accuracy: {(success / len(X_eval) * 100):.2f}%")
+    target_names = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
+    metrics = Metrics(y_true=y_eval_mapped, y_pred=preds, target_names=target_names)
+    print("\nClassification report:")
+    print(metrics.classification_report())
 
 
 def main():
