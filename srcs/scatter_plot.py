@@ -23,7 +23,7 @@ def save_scatter_plot(x: str, y: str) -> None:
         hue="Hogwarts House",
         hue_order=["Ravenclaw", "Hufflepuff", "Slytherin", "Gryffindor"]
         ).set_title(
-            "Arithmancy vs Care of Magical Creatures grades between Hogwarts Houses",
+            "Defense Against the Dark Arts vs Astronomy",
             loc="center"
             )
     fig = sns_plot.get_figure()
@@ -31,4 +31,4 @@ def save_scatter_plot(x: str, y: str) -> None:
 
 
 if __name__ == "__main__":
-    save_scatter_plot(x="Care of Magical Creatures", y="Arithmancy")
+    save_scatter_plot(x="Defense Against the Dark Arts", y="Astronomy")
