@@ -4,12 +4,14 @@ import random
 from OneVsRestClassifier import OneVsRestClassifier as OVR
 import pandas as pd
 from Metrics import Metrics
+import sklearn
 
 THRESHOLD = 0.5
 SEED = 13
 EVAL_DATASET_SIZE = 0.2
 LEARNING_RATE = 2e-2
 ITERATION = 5000
+SAVE_CM = True
 
 
 def split_dataset(X: np.ndarray, y: np.ndarray, eval_size: float) -> tuple[np.ndarray]:
@@ -56,8 +58,14 @@ def test(X_eval, y_eval, W, b) -> None:
 
     target_names = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
     metrics = Metrics(y_true=y_eval_mapped, y_pred=preds, target_names=target_names)
+
     print("\nClassification report:")
     print(metrics.classification_report())
+
+    cm = Metrics.get_confusion_matrix(y_true=y_eval_mapped, y_pred=preds, class_count=len(target_names))
+    Metrics.plot_confusion_matrix(confusion_matrix=cm, target_names=target_names, save=SAVE_CM)
+    if SAVE_CM:
+        print("Confusion matrix saved in 'data_visualization/confusion_matrix.png'")
 
 
 def main():
@@ -108,7 +116,7 @@ def main():
         ovr.fit()
         test(X_eval, y_eval, ovr.W, ovr.b)
         ovr.save_model("model.pkl")
-        print("model saved in model.pkl")
+        print("Model saved in 'model.pkl'")
 
     except Exception as e:
         print(f"{e.__class__.__name__}: {e}")

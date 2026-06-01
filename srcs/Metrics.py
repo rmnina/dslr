@@ -1,5 +1,8 @@
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+from utils import ft_normalize
 
 
 class Metrics():
@@ -64,7 +67,7 @@ class Metrics():
         return buffer
 
     def get_recall(self):
-        return (self.TP / (self.TP + self.FN))
+        return (self.TP / (self.TP + self.FN + 1e-20))
 
     def get_accuracy(self, global_accuracy: bool = False):
         if global_accuracy:
@@ -72,10 +75,55 @@ class Metrics():
         return (self.TP + self.TN) / self.support.sum()
 
     def get_precision(self):
-        return self.TP / (self.TP + self.FP)
+        return self.TP / (self.TP + self.FP + 1e-20)
 
     def get_F1_score(self):
-        return (2 * (self.precision * self.recall) / (self.precision + self.recall))
+        return (2 * (self.precision * self.recall) / (self.precision + self.recall + 1e-20))
 
     def get_F1_macro(self):
         return (self.f1.sum() / self.class_count)
+
+    @staticmethod
+    def get_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, class_count: int) -> pd.DataFrame:
+        confusion_matrix = pd.DataFrame(
+            0,
+            index=range(class_count),
+            columns=range(class_count)
+            )
+
+        for i in range(class_count):
+            for j in range(len(y_pred)):
+                if y_pred[j] == i and y_pred[j] == y_true[j]:
+                    confusion_matrix.iloc[i, i] += 1
+                if y_pred[j] == i and y_pred[j] != y_true[j]:
+                    confusion_matrix.iloc[y_true[j], i] += 1
+
+        return confusion_matrix
+
+    @staticmethod
+    def plot_confusion_matrix(confusion_matrix: pd.DataFrame, target_names: list, save: bool = True):
+        df_norm = ft_normalize(
+            confusion_matrix.to_numpy(),
+            confusion_matrix.min().to_numpy(),
+            confusion_matrix.max().to_numpy()
+            )
+        df = pd.DataFrame(df_norm)
+        df = df.set_axis(target_names, axis='index')
+        df = df.set_axis(target_names, axis='columns')
+
+        sns_plot = sns.heatmap(
+            df,
+            annot=confusion_matrix,
+            fmt='g',
+            cmap='Blues'
+            )
+        sns_plot.set_title(
+            label="Confusion Matrix of Hogwarts House predicted"
+            )
+        plt.xlabel("Predictions")
+        plt.ylabel("Ground truth")
+        fig = sns_plot.get_figure()
+        if save:
+            fig.savefig("data_visualization/confusion_matrix.png")
+        else:
+            plt.show()
